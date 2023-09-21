@@ -6,7 +6,12 @@ Currently, this is Windows-only, though I may make it work for macOS later.
 
 You will need an active license to [Topaz Video AI](https://www.topazlabs.com/topaz-video-ai).
 
-You will also need Windows binaries for [ffmpeg](https://www.gyan.dev/ffmpeg/builds/#release-builds), [MediaInfo CLI](https://mediaarea.net/en/MediaInfo/Download/Windows), [x265](http://msystem.waw.pl/x265/), and [MKVToolNix](https://mkvtoolnix.download/downloads.html#windows).
+You will also need these Windows binaries:
+- [Hybrid](https://www.selur.de/downloads)
+- [ffmpeg](https://www.gyan.dev/ffmpeg/builds/#release-builds)
+- [MediaInfo CLI](https://mediaarea.net/en/MediaInfo/Download/Windows)
+- [x265](http://msystem.waw.pl/x265/)
+- [MKVToolNix](https://mkvtoolnix.download/downloads.html#windows)
 
 
 # Folder Layout
