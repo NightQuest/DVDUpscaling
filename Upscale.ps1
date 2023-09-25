@@ -192,6 +192,7 @@ ForEach ($file in $files)
     $PAR = [float]$mediaFile.getAttribute("Video", "AspectRatio")
     $Width = [int]$mediaFile.getAttribute("Video", "Width")
     $Height = [int]$mediaFile.getAttribute("Video", "Height")
+    $FrameRate_Out_Num = [int]$mediaFile.getAttribute("Video", "FrameRate_Num")
 
     Write-Output "[INFO]: FPS: $frameRate -> $($frameRate * 2)"
     Write-Output "[INFO]: Frames: $frameCount -> $($frameCount * 2)"
@@ -275,12 +276,15 @@ ForEach ($file in $files)
 
             FrameRate = $frameRate
             FrameRate_Num = $frameRate_Num
+            FrameRate_Out_Num = $FrameRate_Out_Num
             FrameRate_Den = $frameRate_Den
 
             cropTop = $($cropValues.top)
             cropBottom = $($cropValues.bottom)
             cropLeft = $($cropValues.left)
             cropRight = $($cropValues.right)
+
+            resample_kernel = $($config.vs_resample_kernel)
         }
 
         $argNames = $arguments.psobject.properties.name

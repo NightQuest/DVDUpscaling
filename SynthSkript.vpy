@@ -48,8 +48,8 @@ import havsfunc
 AspectRatio = float(AspectRatio)
 width = int(width)
 height = int(height)
-FrameRate = float(FrameRate)
 FrameRate_Num = int(FrameRate_Num)
+FrameRate_Out_Num = int(FrameRate_Out_Num)
 FrameRate_Den = int(FrameRate_Den)
 
 clip = core.lsmas.LWLibavSource(source=input_file, format="YUV420P8", stream_index=0, cache=0, fpsnum=FrameRate_Num, fpsden=FrameRate_Den, prefer_hw=0)
@@ -67,8 +67,16 @@ clip = core.std.SetFrameProp(clip=clip, prop="_ColorRange", intval=1)
 clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Num, fpsden=FrameRate_Den)
 clip = core.std.SetFrameProp(clip=clip, prop="_FieldBased", intval=2) # tff
 
-# Deinterlacing using QTGMC
-clip = havsfunc.QTGMC(Input=clip, Preset="Placebo", TFF=True) # new fps 2x
+# Detelecine if not the same
+if FrameRate_Num == FrameRate_Out_Num:
+	clip = havsfunc.QTGMC(Input=clip, Preset="Placebo", TFF=True) # new fps 2x
+else:
+	clip2clip = clip
+	clip2clip = havsfunc.QTGMC(Input=clip2clip, Preset="Placebo", TFF=True, FPSDivisor=2)
+
+	clip = core.tivtc.TFM(clip=clip, mode=3, PP=7, slow=2, clip2=clip2clip)
+	clip = core.tivtc.TDecimate(clip=clip, mode=1, blockx=16, blocky=16)
+
 # Making sure content is preceived as frame based
 clip = core.std.SetFrameProp(clip=clip, prop="_FieldBased", intval=0) # progressive
 # MacOS: clip = core.std.SetFieldBased(clip, 0)
@@ -84,17 +92,18 @@ if cropLeft or cropBottom or cropRight or cropTop:
 	clip = core.std.CropRel(clip=clip, left=cropLeft, right=cropRight, top=cropTop, bottom=cropBottom)
 	# Resizing using 10 - bicubic spline
 	if maintainPAR:
-		clip = core.fmtc.resample(clip=clip, kernel="spline16", w=width, h=(width / AspectRatio), interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=(width / AspectRatio), interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 	else:
-		clip = core.fmtc.resample(clip=clip, kernel="spline16", w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 else:
-	clip = core.fmtc.resample(clip=clip, kernel="spline16", w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+	clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 
 # adjusting output color from: YUV420P16 to YUV422P10 for ProResModel
 clip = core.resize.Bicubic(clip=clip, format=vs.YUV422P10, range_s="limited", dither_type="error_diffusion")
 
-# set output frame rate to 29.97fps (progressive)
-clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Num * 2, fpsden=FrameRate_Den)
+# set output frame rate to 23.976fps (progressive)
+#clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Num * 2, fpsden=FrameRate_Den)
+clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Out_Num, fpsden=FrameRate_Den)
 
 # Output
 clip.set_output()
