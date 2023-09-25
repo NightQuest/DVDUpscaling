@@ -256,7 +256,7 @@ ForEach ($file in $files)
                 # PAR 1:1 conversion (Square pixel)
                 $out = "[INFO]: Resizing post-crop using '$($config.vs_resample_kernel)', "
                 $out += "$($Width - ($cropValues.left + $cropValues.right))x$($Height - ($cropValues.top + $cropValues.bottom))"
-                $out += " -> $([Math]::floor($Height * $PAR))x$($Height)"
+                $out += " -> $([Math]::floor($Width * $PAR))x$($Height)"
                 Write-Output $out
             }
         }
@@ -269,7 +269,8 @@ ForEach ($file in $files)
 
             input_file = "`"$($file.FullName)`""
 
-            AspectRatio = $PAR
+            PixelAspectRatio = $PAR
+            DisplayAspectRatio = $DAR
             maintainPAR = $($config.maintain_aspect_ratio)
 
             width = $Width

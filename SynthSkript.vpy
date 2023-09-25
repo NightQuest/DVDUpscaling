@@ -47,7 +47,8 @@ if os.name == 'nt':
 # Import scripts
 import havsfunc
 
-AspectRatio = float(AspectRatio)
+PixelAspectRatio = float(PixelAspectRatio)
+DisplayAspectRatio = float(DisplayAspectRatio)
 width = int(width)
 height = int(height)
 FrameRate_Num = int(FrameRate_Num)
@@ -94,7 +95,7 @@ if cropLeft or cropBottom or cropRight or cropTop:
 	clip = core.std.CropRel(clip=clip, left=cropLeft, right=cropRight, top=cropTop, bottom=cropBottom)
 	# Resizing using 10 - bicubic spline
 	if maintainPAR:
-		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=(width / AspectRatio), interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=(width / PixelAspectRatio), interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 	else:
 		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 else:
