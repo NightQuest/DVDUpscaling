@@ -189,7 +189,8 @@ ForEach ($file in $files)
 
     # Get our Video properties from MediaInfo
     $mediaFile = [MediaFile]::new($file)
-    $PAR = [float]$mediaFile.getAttribute("Video", "AspectRatio")
+    $PAR = [float]$mediaFile.getAttribute("Video", "PixelAspectRatio")
+    $DAR = [float]$mediaFile.getAttribute("Video", "DisplayAspectRatio")
     $Width = [int]$mediaFile.getAttribute("Video", "Width")
     $Height = [int]$mediaFile.getAttribute("Video", "Height")
     $FrameRate_Out_Num = [int]$mediaFile.getAttribute("Video", "FrameRate_Num")
@@ -255,7 +256,7 @@ ForEach ($file in $files)
                 # PAR 1:1 conversion (Square pixel)
                 $out = "[INFO]: Resizing post-crop using '$($config.vs_resample_kernel)', "
                 $out += "$($Width - ($cropValues.left + $cropValues.right))x$($Height - ($cropValues.top + $cropValues.bottom))"
-                $out += " -> $($Width)x$([Math]::floor($Width / $PAR))"
+                $out += " -> $([Math]::floor($Height * $PAR))x$($Height)"
                 Write-Output $out
             }
         }
