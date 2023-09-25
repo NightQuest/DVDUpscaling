@@ -212,7 +212,7 @@ ForEach ($file in $files)
         {
             Write-Output "[INFO]: Detecting Auto-Crop..."
 
-            $cropInfo = ffmpeg -hide_banner -ss 00:05:00 -i $file.FullName -an -vframes 10 -vf cropdetect=24:16:00 -f null - 2>&1 | Out-String
+            $cropInfo = ffmpeg -hide_banner -ss 00:07:00 -i $file.FullName -an -vframes 10 -vf cropdetect=24:16:00 -f null - 2>&1 | Out-String
 
             if ($cropInfo -notmatch 'x1:(?<x1>\d{1,6}) x2:(?<x2>\d{1,6}) y1:(?<y1>\d{1,6}) y2:(?<y2>\d{1,6}) w:(?<w>\d{1,6}) h:(?<h>\d{1,6}) x:(?<x>\d{1,6}) y:(?<y>\d{1,6})')
             {
