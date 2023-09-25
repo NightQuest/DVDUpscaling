@@ -304,7 +304,7 @@ ForEach ($file in $files)
         }
 
         # Write our De-Interlaced file
-        Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$vspipe_path`" $argString --container y4m `"SynthSkript.vpy`" - | `"$ffmpeg_path`" -y -hide_banner -loglevel error -stats -noautorotate -nostdin -threads 8 -f yuv4mpegpipe -i - -an -sn -vf `"zscale=rangein=tv:range=tv`" -strict -1 -fps_mode passthrough -vcodec prores_ks -profile:v 3 -vtag apch -aspect $PAR -metadata encoding_tool=`"$($config.encoding_tool)`" -f mov `"$deint_path`"`"" -NoNewWindow -Wait
+        Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$vspipe_path`" $argString --container y4m `"SynthSkript.vpy`" - | `"$ffmpeg_path`" -y -hide_banner -loglevel error -stats -noautorotate -nostdin -threads 8 -f yuv4mpegpipe -i - -an -sn -vf `"zscale=rangein=tv:range=tv`" -strict -1 -fps_mode passthrough -vcodec prores_ks -profile:v 3 -vtag apch -aspect $DAR -metadata encoding_tool=`"$($config.encoding_tool)`" -f mov `"$deint_path`"`"" -NoNewWindow -Wait
     }
     else
     {
@@ -403,7 +403,7 @@ ForEach ($file in $files)
         $frameRate = $UpscaledMediaFile.getAttribute("Video", "FrameRate")
 
         # Encode with x265
-        Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$ffmpeg_path`" -y -hide_banner -loglevel error -f mov -i `"$upscale_path`" -strict -1 -f yuv4mpegpipe - | `"$x265_path`" --log-level none --y4m --input - --input-res $($config.upscale_Width)x$($config.upscale_Height) --fps $frameRate --frames $frameCount --input-depth 10 --profile main422-10 --level-idc 5.2 --preset placebo --tune animation --crf 20 --rd 4 --psy-rd 0.75 --psy-rdoq 4.0 --rdoq-level 1 --no-strong-intra-smoothing --aq-mode 1 --rskip 2 --no-rect --output `"$encode_path`"`""  -NoNewWindow -Wait
+        Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$ffmpeg_path`" -y -hide_banner -loglevel error -f mov -i `"$upscale_path`" -strict -1 -f yuv4mpegpipe - | `"$x265_path`" --log-level none --y4m --input - --input-res $($config.upscale_Width)x$($config.upscale_Height) --fps $frameRate --frames $frameCount --input-depth 10 --profile main422-10 --level-idc 5.2 --preset placebo --tune grain --crf 20 --rd 4 --psy-rd 0.75 --psy-rdoq 4.0 --rdoq-level 1 --no-strong-intra-smoothing --aq-mode 1 --rskip 2 --no-rect --output `"$encode_path`"`""  -NoNewWindow -Wait
 
         if (Test-Path -LiteralPath $encode_path -PathType 'Leaf')
         {

@@ -52,6 +52,7 @@ PixelAspectRatio = float(PixelAspectRatio)
 DisplayAspectRatio = float(DisplayAspectRatio)
 width = int(width)
 height = int(height)
+PARWidth = int(width * PixelAspectRatio)
 FrameRate_Num = int(FrameRate_Num)
 FrameRate_Out_Num = int(FrameRate_Out_Num)
 FrameRate_Den = int(FrameRate_Den)
@@ -96,7 +97,7 @@ if cropLeft or cropBottom or cropRight or cropTop:
 	clip = core.std.CropRel(clip=clip, left=cropLeft, right=cropRight, top=cropTop, bottom=cropBottom)
 	# Resizing using 10 - bicubic spline
 	if maintainPAR:
-		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=math.floor(width / PixelAspectRatio), h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=PARWidth, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 	else:
 		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 else:
