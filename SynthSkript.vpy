@@ -42,7 +42,7 @@ if os.name == 'nt':
 	core.std.LoadPlugin(path=hybrid_path + "/64bit/vsfilters/DeinterlaceFilter/Bwdif/Bwdif.dll")
 	core.std.LoadPlugin(path=hybrid_path + "/64bit/vsfilters/SourceFilter/LSmashSource/vslsmashsource.dll")
 
-	core.std.LoadPlugin(path="C:/Program Files/Hybrid/64bit/vsfilters/DeinterlaceFilter/TIVTC/libtivtc.dll")
+	core.std.LoadPlugin(path=hybrid_path + "/64bit/vsfilters/DeinterlaceFilter/TIVTC/libtivtc.dll")
 
 # Import scripts
 import havsfunc
