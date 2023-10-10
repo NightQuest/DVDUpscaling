@@ -3,6 +3,13 @@
 # Date: 2023-09-09
 # 
 # Changelog:
+# v4 - 2023-10-10
+# - Use DGIndex
+# - Removed maintainPAR, replaced with force_square_pixels
+# - QTGMC will now run on 'Draft' for minimal processing
+# - Allow overriding input/output FPS
+# - Bug fixes
+#
 # v3 - 2023-09-21
 # - Sort files by episode number
 # 
@@ -20,7 +27,7 @@ $env:TVAI_MODEL_DATA_DIR = "C:/ProgramData/Topaz Labs LLC/Topaz Video AI/models"
 $env:TVAI_MODEL_DIR = "C:/ProgramData/Topaz Labs LLC/Topaz Video AI/models"
 
 $config = [PSCustomObject]@{
-    encoding_tool = "Stardust Upscaler v3"
+    encoding_tool = "Stardust Upscaler v4"
 
     # Input, Output, and temporary folders
     input_folder = "E:/Dragon Ball/Season 1/RAW"
