@@ -23,8 +23,8 @@ $config = [PSCustomObject]@{
     encoding_tool = "Stardust Upscaler v3"
 
     # Input, Output, and temporary folders
-    input_folder = "E:/Dragon Ball/Season 1/RAW"
-    output_folder = "E:/Dragon Ball/Season 1"
+    input_folder = "E:/Stargate SG-1/Season 1"
+    output_folder = "E:/Stargate SG-1 - AI Upscale/Season 1"
     temp_folder = "E:/temp"
 
     # Utility folders
@@ -36,21 +36,21 @@ $config = [PSCustomObject]@{
     skip_existing = $true
 
     # De-interlace settings
-    auto_crop = $true
+    auto_crop = $false
     force_square_pixels = $true
     vs_resample_kernel = 'spline16'
 
     force_input_fps = $false
-    force_output_fps = $false
+    force_output_fps = $true
 
     input_frame_rate_num = $null
     input_frame_rate_den = $null
 
-    output_frame_rate_num = $null
-    output_frame_rate_den = $null
+    output_frame_rate_num = 30000
+    output_frame_rate_den = 1001
 
     # Target dimensions
-    upscale_Width = 1440
+    upscale_Width = 1920
     upscale_Height = 1080
 
     topaz = [PSCustomObject]@{
@@ -61,33 +61,33 @@ $config = [PSCustomObject]@{
             model       = "prob-3"
 
             # Has Another Enhancement?
-            scale       = 1
+            scale       = 2
 
             # Anti-Alias/Deblur
-            preblur     = 0 
+            preblur     = 0.2
 
             # Reduce Noise
-            noise       = 0.25
+            noise       = 0.2
 
             # Improve Detail
-            details     = 0
+            details     = 0.15
 
             # De-halo
-            halo        = 0.25
+            halo        = 0
 
             # Sharpen
-            blur        = 0.25 
+            blur        = 0
 
             # Recover Original Detail
             blend       = 0.2 
 
             # Revert Compression
-            compression = 0.6
+            compression = 0.35
 
             # estimate    = 20
 
             # Grain Amount
-            grain       = 0.04
+            grain       = 0.02
 
             # Grain Size
             gsize       = 2
@@ -112,17 +112,17 @@ $config = [PSCustomObject]@{
         enhancement_pass_two = [PSCustomObject]@{
             model       = "prob-3"
             scale       = 0
-            w           = 1440
+            w           = 1920
             h           = 1080
-            preblur     = 0.5
-            noise       = 0.5
-            details     = 0.35
+            preblur     = 0.3
+            noise       = 0.2
+            details     = 0.15
             halo        = 0
-            blur        = 0
-            compression = 0.5
+            blur        = 0.15
+            compression = 0
             # estimate = 20
             blend       = 0.2
-            grain       = 0.04
+            grain       = 0.02
             gsize       = 2
             device      = -2
             vram        = 1
