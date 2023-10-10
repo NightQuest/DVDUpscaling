@@ -171,6 +171,9 @@ ForEach ($file in $files)
     $encode_path = "$($config.temp_folder)/$($file.BaseName)_encoded.h265"
     $final_path = "$($config.output_folder)/$($file.BaseName).mkv"
 
+    # Timing
+    $start_time = Get-Date
+
     Write-Output "[INFO]: Analyzing '$($file.Name)'..."
 
     # Do not rely on MediaInfo for FPS - it is incorrect for VFR
@@ -263,6 +266,8 @@ ForEach ($file in $files)
 
         Write-Output "[INFO]: De-interlacing with VapourSynth..."
 
+        $start_time = Get-Date
+
         $arguments = [PSCustomObject]@{
 
             hybrid_path = "`"$($config.hybrid_location)`""
@@ -305,6 +310,11 @@ ForEach ($file in $files)
 
         # Write our De-Interlaced file
         Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$vspipe_path`" $argString --container y4m `"SynthSkript.vpy`" - | `"$ffmpeg_path`" -y -hide_banner -loglevel error -stats -noautorotate -nostdin -threads 8 -f yuv4mpegpipe -i - -an -sn -vf `"zscale=rangein=tv:range=tv`" -strict -1 -fps_mode passthrough -vcodec prores_ks -profile:v 3 -vtag apch -aspect $DAR -metadata encoding_tool=`"$($config.encoding_tool)`" -f mov `"$deint_path`"`"" -NoNewWindow -Wait
+
+        $now = Get-Date
+        $time_taken = New-TimeSpan -Start $start_time -End $now
+
+        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
     }
     else
     {
@@ -321,6 +331,8 @@ ForEach ($file in $files)
         }
 
         Write-Output "[INFO]: Upscaling with Topaz AI..."
+
+        $start_time = Get-Date
 
         $filter_complex = ""
         $filter_complex_pass_one = ""
@@ -366,6 +378,11 @@ ForEach ($file in $files)
         # Do the upscale
         Start-Process -FilePath $ffmpeg_ai_path -ArgumentList "-y -hide_banner -loglevel quiet -stats -hwaccel auto -i `"$deint_path`" -sws_flags `"spline+accurate_rnd+full_chroma_int`" -color_trc 2 -colorspace 2 -color_primaries 2 -filter_complex `"$filter_complex`" -c:v prores_ks -profile:v 3 -vendor apl0 -quant_mat hq -bits_per_mb 1350 -pix_fmt yuv422p10le -an -map_metadata 0 -map_metadata:s:v 0:s:v -movflags `"use_metadata_tags+write_colr`" -metadata encoding_tool=`"$($config.encoding_tool)`" -f mov `"$upscale_path`"" -NoNewWindow -Wait
 
+        $now = Get-Date
+        $time_taken = New-TimeSpan -Start $start_time -End $now
+
+        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
+
         if (Test-Path -LiteralPath $upscale_path -PathType 'Leaf')
         {
             # Remove De-Interlaced temp
@@ -398,12 +415,19 @@ ForEach ($file in $files)
 
         Write-Output "[INFO]: Encoding upscale with x265..."
 
+        $start_time = Get-Date
+
         $UpscaledMediaFile = [MediaFile]::new($upscale_path)
         $frameCount = $UpscaledMediaFile.getAttribute("Video", "FrameCount")
         $frameRate = $UpscaledMediaFile.getAttribute("Video", "FrameRate")
 
         # Encode with x265
         Start-Process -FilePath "cmd" -ArgumentList "/c `"`"$ffmpeg_path`" -y -hide_banner -loglevel error -f mov -i `"$upscale_path`" -strict -1 -f yuv4mpegpipe - | `"$x265_path`" --log-level none --y4m --input - --input-res $($config.upscale_Width)x$($config.upscale_Height) --fps $frameRate --frames $frameCount --input-depth 10 --profile main422-10 --level-idc 5.2 --preset placebo --tune grain --crf 24 --rd 4 --psy-rd 0.75 --psy-rdoq 4.0 --rdoq-level 1 --no-strong-intra-smoothing --aq-mode 1 --rskip 2 --no-rect --output `"$encode_path`"`""  -NoNewWindow -Wait
+
+        $now = Get-Date
+        $time_taken = New-TimeSpan -Start $start_time -End $now
+
+        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
 
         if (Test-Path -LiteralPath $encode_path -PathType 'Leaf')
         {
