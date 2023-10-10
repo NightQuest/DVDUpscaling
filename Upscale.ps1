@@ -37,9 +37,8 @@ $config = [PSCustomObject]@{
 
     # De-interlace settings
     auto_crop = $true
-    maintain_aspect_ratio = $true # use only if autocrop is enabled
-    vs_resample_kernel = 'lanczos'
     force_square_pixels = $true
+    vs_resample_kernel = 'spline16'
 
     force_input_fps = $false
     force_output_fps = $false
