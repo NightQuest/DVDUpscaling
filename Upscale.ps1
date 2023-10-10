@@ -23,8 +23,8 @@ $config = [PSCustomObject]@{
     encoding_tool = "Stardust Upscaler v3"
 
     # Input, Output, and temporary folders
-    input_folder = "E:/Dragon Ball/Season 1"
-    output_folder = "E:/Dragon Ball/Season 1 - AI Upscale"
+    input_folder = "E:/Dragon Ball/Season 1/RAW"
+    output_folder = "E:/Dragon Ball/Season 1"
     temp_folder = "E:/temp"
 
     # Utility folders
