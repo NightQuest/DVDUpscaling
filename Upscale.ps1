@@ -451,7 +451,14 @@ ForEach ($file in $files)
         $lang = $video.getAttribute("Video", "Language")
 
         # Merge our upscaled video & everything but video from our original
-        mkvmerge -o "$final_path" --quiet --no-audio --no-subtitles --no-buttons --language 0:$lang "$encode_path" --no-video "$($file.FullName)"
+        if ($lang.length)
+        {
+            mkvmerge -o "$final_path" --quiet --no-audio --no-subtitles --no-buttons --language 0:$lang "$encode_path" --no-video "$($file.FullName)"
+        }
+        else
+        {
+            mkvmerge -o "$final_path" --quiet --no-audio --no-subtitles --no-buttons "$encode_path" --no-video "$($file.FullName)"
+        }
 
         # Verify we wrote the file
         if (Test-Path -LiteralPath $final_path -PathType 'Leaf')

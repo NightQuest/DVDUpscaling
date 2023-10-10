@@ -19,8 +19,20 @@ class MediaFile
 
     [String] getAttribute([String] $kind, [String] $property)
     {
+        return $this.getAttribute($kind, $property, "")
+    }
+
+    [String] getAttribute([String] $kind, [String] $property, [String] $defaultValue)
+    {
         $ret = mediainfo --Output="$kind;%$property%" "$($this.fileName)" | Out-String -NoNewLine
-        return $ret.Trim()
+        $ret = $ret.Trim()
+
+        if (-not $ret)
+        {
+            return $defaultValue
+        }
+
+        return $ret
     }
 }
 
