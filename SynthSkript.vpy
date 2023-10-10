@@ -44,6 +44,7 @@ if os.name == 'nt':
 	core.std.LoadPlugin(path=hybrid_path + "/64bit/vsfilters/SourceFilter/LSmashSource/vslsmashsource.dll")
 
 	core.std.LoadPlugin(path=hybrid_path + "/64bit/vsfilters/DeinterlaceFilter/TIVTC/libtivtc.dll")
+	core.std.LoadPlugin(path=d2vsource_path)
 
 # Import scripts
 import havsfunc
@@ -61,7 +62,6 @@ FrameRate = float(FrameRate)
 FrameRateNew = float(FrameRateNew)
 force_square_pixels = bool(force_square_pixels)
 
-clip = core.lsmas.LWLibavSource(source=input_file, format="YUV420P8", stream_index=0, cache=0, fpsnum=FrameRate_Num, fpsden=FrameRate_Den, prefer_hw=0)
 cropLeft = int(cropLeft)
 cropRight = int(cropRight)
 cropTop = int(cropTop)
@@ -73,6 +73,11 @@ cropBottom = int(cropBottom)
 
 if PARWidth % 2: # Mod 2
 	PARWidth = PARWidth + (PARWidth % 2)
+
+if input_file.lower().endswith('.d2v'):
+    clip = core.d2v.Source(input=input_file, nocrop=True, rff=True)
+else:
+    clip = core.lsmas.LWLibavSource(source=input_file, format="YUV420P8", stream_index=0, cache=0, fpsnum=FrameRate_Num, fpsden=FrameRate_Den, prefer_hw=0)
 
 # Setting detected color matrix (470bg).
 clip = core.std.SetFrameProps(clip, _Matrix=5)
@@ -88,14 +93,24 @@ clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Num, fpsden=FrameRate_Den)
 clip = core.std.SetFrameProp(clip=clip, prop="_FieldBased", intval=2) # tff
 
 # Detelecine if not the same
-if FrameRate_Num == FrameRate_Out_Num:
-	clip = havsfunc.QTGMC(Input=clip, Preset="Placebo", TFF=True) # new fps 2x
-else:
-	clip2clip = clip
-	clip2clip = havsfunc.QTGMC(Input=clip2clip, Preset="Placebo", TFF=True, FPSDivisor=2)
+#if FrameRate_Num == FrameRate_Out_Num:
+	#clip = havsfunc.QTGMC(Input=clip, Preset="Placebo") # new fps 2x
+#else:
+#clip2clip = havsfunc.srestore(source=clip2clip, frate=FrameRateNew, omode=6, speed=-9, thresh=16, mode=2)
 
-	clip = core.tivtc.TFM(clip=clip, mode=3, PP=7, slow=2, clip2=clip2clip)
-	clip = core.tivtc.TDecimate(clip=clip, mode=1, blockx=16, blocky=16)
+
+	#clip = core.tivtc.TFM(clip=clip, mode=3, PP=7, slow=2, clip2=clip2clip)
+	#clip = core.tivtc.TDecimate(clip=clip, mode=7, rate=FrameRateNew, dupThresh=0.04, vidThresh=3.50, sceneThresh=15.00)# new fps: 19.3112
+if input_file.lower().endswith('.d2v'):
+    clip = core.tivtc.TFM(clip=clip, mode=3, PP=7, slow=2, d2v=input_file)
+else:
+    clip = core.tivtc.TFM(clip=clip, mode=3, PP=7, slow=2)
+#clip = havsfunc.QTGMC(Input=clip, Preset="Placebo")
+#if FrameRate_Out_Num <= FrameRate_Num:
+#    clip = core.tivtc.TDecimate(clip=clip)
+clip = havsfunc.QTGMC(Input=clip, Preset="Draft", InputType=2)
+
+#clip = core.vivtc.VDecimate(clip)
 
 # Making sure content is preceived as frame based
 clip = core.std.SetFrameProp(clip=clip, prop="_FieldBased", intval=0) # progressive

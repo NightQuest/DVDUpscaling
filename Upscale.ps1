@@ -144,6 +144,8 @@ $x265_path = "$toolsPath/x265/x265-10b.exe"
 $mediainfo_path = "$toolsPath/MediaInfo/MediaInfo.exe"
 $mkvmerge_path = "$toolsPath/mkvtoolnix/mkvmerge.exe"
 $mkvpropredit_path = "$toolsPath/mkvtoolnix/mkvpropedit.exe"
+$dgindex_path = "$toolsPath/dgmpgdec/DGIndex.exe"
+$d2vsource_path = "$toolsPath/vsfilters/d2vsource/win64/d2vsource.dll"
 
 # Aliases for direct program execution
 Set-Alias -Name mediainfo -Value $mediainfo_path
@@ -151,17 +153,20 @@ Set-Alias -Name ffmpeg -Value $ffmpeg_path
 Set-Alias -Name ffprobe -Value $ffprobe_path
 Set-Alias -Name mkvmerge -Value $mkvmerge_path
 Set-Alias -Name mkvpropedit -Value $mkvpropredit_path
+Set-Alias -Name DGIndex -Value $dgindex_path
 
 # Include other files
 . "Modules/MediaFile.ps1"
 
 # Get input files
-$files = Get-ChildItem -LiteralPath $config.input_folder
+$files = Get-ChildItem -LiteralPath $config.input_folder -File | Where-Object { $_.extension.toLower() -in @(
+    ".mpg", ".vob", ".mpeg", ".m2ts"
+    ) }
 
 # If configured, remove any that already exist
 if ($config.skip_existing)
 {
-    $files = $files | Where-Object { -not (Test-Path -LiteralPath "$($config.output_folder)/$($_.Name)" -PathType 'Leaf') }
+    $files = $files | Where-Object { -not (Test-Path -LiteralPath "$($config.output_folder)/$($_.BaseName).mkv" -PathType 'Leaf') }
 
     # Sort files in order (Assumes episodes start with a number)
     if ($files[0].BaseName -match "\d+ .*")
@@ -174,9 +179,11 @@ if ($config.skip_existing)
 ForEach ($file in $files)
 {
     # Setup our paths
-    $deint_path = "$($config.temp_folder)/$($file.BaseName)_deinterlaced.mov"
-    $upscale_path = "$($config.temp_folder)/$($file.BaseName)_upscaled.mov"
-    $encode_path = "$($config.temp_folder)/$($file.BaseName)_encoded.h265"
+    $temp_path = "$($config.temp_folder)/$($file.BaseName)"
+    $d2v_path = "$($temp_path).d2v"
+    $deint_path = "$($temp_path)_deinterlaced.mov"
+    $upscale_path = "$($temp_path)_upscaled.mov"
+    $encode_path = "$($temp_path)_encoded.h265"
     $final_path = "$($config.output_folder)/$($file.BaseName).mkv"
 
     # Timing
@@ -305,6 +312,29 @@ ForEach ($file in $files)
             $out += " -> $($PARWidth)x$($Height)"
             Write-Output $out
         }
+
+        $vs_input_path = $file.FullName
+        if (
+            $file.extension.toLower() -eq ".vob" -or
+            $file.extension.toLower() -eq ".m2ts"
+            )
+        {
+            if (-not (Test-Path -LiteralPath "$d2v_path" -PathType 'Leaf'))
+            {
+                Write-Output "[INFO]: Generating D2V file with DGIndex..."
+
+                DGIndex -i "`"$($file.FullName)`"" -o "`"$temp_path`"" -fo 0 -om 0 -hide -exit | Out-Null
+
+                Start-Sleep 1
+
+                if (Test-Path -LiteralPath "$d2v_path" -PathType 'Leaf')
+                {
+                    $vs_input_path = $d2v_path
+                }
+                else
+                {
+                    Write-Error "[ERROR]: Failed to write D2V file!"
+                }
             }
         }
 
@@ -316,7 +346,9 @@ ForEach ($file in $files)
 
             hybrid_path = "`"$($config.hybrid_location)`""
 
-            input_file = "`"$($file.FullName)`""
+            d2vsource_path = "`"$($d2vsource_path)`""
+
+            input_file = "`"$($vs_input_path)`""
 
             PixelAspectRatio = $PAR
             DisplayAspectRatio = $DAR
@@ -441,6 +473,11 @@ ForEach ($file in $files)
                 else
                 {
                     Remove-Item -Path $deint_path
+                }
+
+                if (Test-Path -LiteralPath $d2v_path -PathType 'Leaf')
+                {
+                    Remove-Item -Path $d2v_path
                 }
             }
         }
