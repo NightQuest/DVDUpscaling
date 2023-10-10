@@ -56,8 +56,23 @@ PARWidth = int(width * PixelAspectRatio)
 FrameRate_Num = int(FrameRate_Num)
 FrameRate_Out_Num = int(FrameRate_Out_Num)
 FrameRate_Den = int(FrameRate_Den)
+FrameRate_Out_Den = int(FrameRate_Out_Den)
+FrameRate = float(FrameRate)
+FrameRateNew = float(FrameRateNew)
+force_square_pixels = bool(force_square_pixels)
 
 clip = core.lsmas.LWLibavSource(source=input_file, format="YUV420P8", stream_index=0, cache=0, fpsnum=FrameRate_Num, fpsden=FrameRate_Den, prefer_hw=0)
+cropLeft = int(cropLeft)
+cropRight = int(cropRight)
+cropTop = int(cropTop)
+cropBottom = int(cropBottom)
+
+# No conversion needed
+#input_file = str(input_file)
+#resample_kernel = str(resample_kernel)
+
+if PARWidth % 2: # Mod 2
+	PARWidth = PARWidth + (PARWidth % 2)
 
 # Setting detected color matrix (470bg).
 clip = core.std.SetFrameProps(clip, _Matrix=5)
@@ -86,8 +101,12 @@ else:
 clip = core.std.SetFrameProp(clip=clip, prop="_FieldBased", intval=0) # progressive
 # MacOS: clip = core.std.SetFieldBased(clip, 0)
 
+# Decimate 29.970 -> 23.976
+#clip = core.std.SelectEvery(clip=clip, cycle=5, offsets=[0, 1, 3, 4])
+#clip = core.std.SelectEvery(clip=clip, cycle=5, offsets=[0, 1, 2, 3])
+
 # adjusting frame count and rate with sRestore
-# clip = havsfunc.srestore(source=clip, frate=FrameRate, omode=6, speed=9, thresh=16, mode=2)
+#clip = havsfunc.srestore(source=clip, frate=FrameRateNew, omode=6, speed=9, thresh=16, mode=2)
 
 # ColorMatrix: adjusting color matrix from 470bg to 709
 # adjusting luma range to 'limited' due to post clipping
@@ -95,11 +114,10 @@ clip = core.resize.Bicubic(clip=clip, matrix_in_s="470bg", matrix_s="709", range
 # cropping the video to 720x478
 if cropLeft or cropBottom or cropRight or cropTop:
 	clip = core.std.CropRel(clip=clip, left=cropLeft, right=cropRight, top=cropTop, bottom=cropBottom)
-	# Resizing using 10 - bicubic spline
-	if maintainPAR:
-		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=PARWidth, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
-	else:
-		clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
+
+# Resizing using 10 - bicubic spline
+if force_square_pixels:
+	clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=PARWidth, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 else:
 	clip = core.fmtc.resample(clip=clip, kernel=resample_kernel, w=width, h=height, interlaced=False, interlacedd=False) # resolution 720x540# before YUV420P8 after YUV420P16
 
@@ -108,7 +126,7 @@ clip = core.resize.Bicubic(clip=clip, format=vs.YUV422P10, range_s="limited", di
 
 # set output frame rate to 23.976fps (progressive)
 #clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Num * 2, fpsden=FrameRate_Den)
-clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Out_Num, fpsden=FrameRate_Den)
+clip = core.std.AssumeFPS(clip=clip, fpsnum=FrameRate_Out_Num, fpsden=FrameRate_Out_Den)
 
 # Output
 clip.set_output()

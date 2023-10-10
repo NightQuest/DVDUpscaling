@@ -39,11 +39,20 @@ $config = [PSCustomObject]@{
     auto_crop = $true
     maintain_aspect_ratio = $true # use only if autocrop is enabled
     vs_resample_kernel = 'lanczos'
+    force_square_pixels = $true
+
+    force_input_fps = $false
+    force_output_fps = $false
+
+    input_frame_rate_num = $null
+    input_frame_rate_den = $null
+
+    output_frame_rate_num = $null
+    output_frame_rate_den = $null
 
     # Target dimensions
     upscale_Width = 1440
     upscale_Height = 1080
-
 
     topaz = [PSCustomObject]@{
         enhancement_passes = 2
@@ -196,10 +205,38 @@ ForEach ($file in $files)
     $DAR = [float]$mediaFile.getAttribute("Video", "DisplayAspectRatio")
     $Width = [int]$mediaFile.getAttribute("Video", "Width")
     $Height = [int]$mediaFile.getAttribute("Video", "Height")
-    $FrameRate_Out_Num = [int]$mediaFile.getAttribute("Video", "FrameRate_Num")
 
-    Write-Output "[INFO]: FPS: $frameRate -> $($frameRate * 2)"
-    Write-Output "[INFO]: Frames: $frameCount -> $($frameCount * 2)"
+    if ($config.force_input_fps)
+    {
+        $frameRate_Num = $config.input_frame_rate_num
+        $frameRate_Den = $config.input_frame_rate_den
+        $frameRate = [Math]::Round($frameRate_Num / $frameRate_Den, 3)
+
+        Write-Output "[INFO]: Forcing input FPS: $frameRate"
+    }
+    else
+    {
+        $frameRate = [float]$mediaFile.getAttribute("Video", "FrameRate", $frameRate)
+        $frameRate_Num = [int]$mediaFile.getAttribute("Video", "FrameRate_Num", $frameRate_Num)
+        $frameRate_Den = [int]$mediaFile.getAttribute("Video", "FrameRate_Den", $frameRate_Den)
+    }
+
+    if ($config.force_output_fps)
+    {
+        $frameRate_Out_Num = $config.output_frame_rate_num
+        $frameRate_Out_Den = $config.output_frame_rate_den
+        $frameRateNew = [Math]::Round($frameRate_Out_Num / $frameRate_Out_Den, 3)
+
+        Write-Output "[INFO]: Forcing output FPS: $frameRateNew"
+    }
+    else
+    {
+        $frameRate_Out_Num = [int]$mediaFile.getAttribute("Video", "FrameRate_Num", $frameRate_Num)
+        $frameRate_Out_Den = [int]$mediaFile.getAttribute("Video", "FrameRate_Den", $frameRate_Den)
+        $frameRateNew = [Math]::Round($frameRate_Out_Num / $frameRate_Out_Den, 3)
+    }
+
+    Write-Output "[INFO]: FPS: $frameRate -> $frameRateNew"
 
     # Have we already De-Interlaced?
     if (-not (Test-Path -LiteralPath $deint_path -PathType 'Leaf'))
@@ -253,14 +290,22 @@ ForEach ($file in $files)
 
                 Write-Output $out
             }
+        }
 
-            if ($config.maintain_aspect_ratio)
+        if ($config.force_square_pixels)
+        {
+            $PARWidth = [Math]::Floor($width * $PAR)
+            if ($PARWidth % 2)
             {
-                # PAR 1:1 conversion (Square pixel)
-                $out = "[INFO]: Resizing post-crop using '$($config.vs_resample_kernel)', "
-                $out += "$($Width - ($cropValues.left + $cropValues.right))x$($Height - ($cropValues.top + $cropValues.bottom))"
-                $out += " -> $([Math]::floor($Width * $PAR))x$($Height)"
-                Write-Output $out
+                $PARWidth = $PARWidth + ($PARWidth % 2)
+            }
+
+            # PAR 1:1 conversion (Square pixel)
+            $out = "[INFO]: Resizing using '$($config.vs_resample_kernel)', "
+            $out += "$($Width - ($cropValues.left + $cropValues.right))x$($Height - ($cropValues.top + $cropValues.bottom))"
+            $out += " -> $($PARWidth)x$($Height)"
+            Write-Output $out
+        }
             }
         }
 
@@ -276,15 +321,17 @@ ForEach ($file in $files)
 
             PixelAspectRatio = $PAR
             DisplayAspectRatio = $DAR
-            maintainPAR = $($config.maintain_aspect_ratio)
+            force_square_pixels = $($config.force_square_pixels)
 
             width = $Width
             height = $Height
 
             FrameRate = $frameRate
+            FrameRateNew = $frameRateNew
             FrameRate_Num = $frameRate_Num
-            FrameRate_Out_Num = $FrameRate_Out_Num
+            FrameRate_Out_Num = $frameRate_Out_Num
             FrameRate_Den = $frameRate_Den
+            FrameRate_Out_Den = $frameRate_Out_Den
 
             cropTop = $($cropValues.top)
             cropBottom = $($cropValues.bottom)
