@@ -3,6 +3,9 @@
 # Date: 2023-09-09
 # 
 # Changelog:
+# vNext
+# - Dynamically determine Topaz AI's model directory
+#
 # v4 - 2023-10-10
 # - Use DGIndex
 # - Removed maintainPAR, replaced with force_square_pixels
@@ -23,8 +26,28 @@
 #
 
 # Topaz Video AI model directories - required
-$env:TVAI_MODEL_DATA_DIR = "C:/ProgramData/Topaz Labs LLC/Topaz Video AI/models"
-$env:TVAI_MODEL_DIR = "C:/ProgramData/Topaz Labs LLC/Topaz Video AI/models"
+$regEntry = Get-Item 'HKLM:\SOFTWARE\Topaz Labs LLC\Topaz Video AI'
+if (-not $regEntry)
+{
+    Write-Error "[ERROR]: Cannot Find Topaz Video AI Registry Entry! Are you sure it's installed?"
+    exit
+}
+
+$modelDir = $regEntry.GetValue('ModelDir').Trim('\\')
+if (-not $modelDir.length)
+{
+    Write-Error "[ERROR]: Cannot Find Topaz Video AI's modelDir Registry Entry!"
+    exit
+}
+
+if (-not Test-Path -LiteralPath $modelDir -PathType 'Container')
+{
+    Write-Error "[ERROR]: Not a valid directory: `"$($modelDir)`""
+    exit
+}
+
+$env:TVAI_MODEL_DATA_DIR = $modelDir
+$env:TVAI_MODEL_DIR = $modelDir
 
 $config = [PSCustomObject]@{
     encoding_tool = "Stardust Upscaler v4"
