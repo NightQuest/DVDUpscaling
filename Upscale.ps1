@@ -199,7 +199,7 @@ if ($config.skip_existing)
     $files = $files | Where-Object { -not (Test-Path -LiteralPath "$($config.output_folder)/$($_.BaseName).mkv" -PathType 'Leaf') }
 
     # Sort files in order (Assumes episodes start with a number)
-    if ($files[0].BaseName -match "\d+ .*")
+    if ($files.length -ge 1 -and $files[0].BaseName -match "\d+ .*")
     {
         $files = $files | Sort-Object { [int](($_.BaseName -Split ' ')[0]) }
     }
