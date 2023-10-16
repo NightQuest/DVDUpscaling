@@ -40,7 +40,7 @@ if (-not $modelDir.length)
     exit
 }
 
-if (-not Test-Path -LiteralPath $modelDir -PathType 'Container')
+if (-not (Test-Path -LiteralPath $modelDir -PathType 'Container'))
 {
     Write-Error "[ERROR]: Not a valid directory: `"$($modelDir)`""
     exit
