@@ -205,6 +205,12 @@ if ($config.skip_existing)
     }
 }
 
+if ($files.length -eq 0)
+{
+    Write-Output "[INFO]: No files to process."
+    exit
+}
+
 # Iterate our files
 ForEach ($file in $files)
 {
