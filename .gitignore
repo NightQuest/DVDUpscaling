@@ -1,3 +1,4 @@
 .debris/
 bin/
 /**/.DS_Store
+Config.ps1

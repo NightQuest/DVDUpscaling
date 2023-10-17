@@ -1,0 +1,110 @@
+$config = [PSCustomObject]@{
+    encoding_tool = "Stardust Upscaler v4"
+
+    # Input, Output, and temporary folders
+    input_folder = ""
+    output_folder = ""
+    temp_folder = ""
+
+    # Utility folders
+    hybrid_location = "C:/Program Files/Hybrid"
+
+    # Process settings
+    clean_temp = $true
+    skip_existing = $true
+
+    # De-interlace settings
+    auto_crop = $false
+    force_square_pixels = $true
+    vs_resample_kernel = 'spline16'
+
+    force_input_fps = $false
+    force_output_fps = $true
+
+    input_frame_rate_num = $null
+    input_frame_rate_den = $null
+
+    output_frame_rate_num = 30000
+    output_frame_rate_den = 1001
+
+    # Target dimensions
+    upscale_Width = 1920
+    upscale_Height = 1080
+
+    topaz = [PSCustomObject]@{
+        enhancement_passes = 2
+
+        enhancement_pass_one = [PSCustomObject]@{
+            # AI Model
+            model       = "prob-3"
+
+            # Has Another Enhancement?
+            scale       = 2
+
+            # Anti-Alias/Deblur
+            preblur     = 0.2
+
+            # Reduce Noise
+            noise       = 0.2
+
+            # Improve Detail
+            details     = 0.15
+
+            # De-halo
+            halo        = 0
+
+            # Sharpen
+            blur        = 0
+
+            # Recover Original Detail
+            blend       = 0.2 
+
+            # Revert Compression
+            compression = 0.35
+
+            # estimate    = 20
+
+            # Grain Amount
+            grain       = 0.02
+
+            # Grain Size
+            gsize       = 2
+
+            # AI Processing Device
+            # -2 Auto
+            # -1 CPU
+            # 0 First GPU
+            # 1 Second GPU
+            # 2 All GPUs
+            device      = -2
+
+            # Max Memory Usage (50% -> 0.5)
+            vram        = 1
+
+            # Max Processes
+            # 1 = 1
+            # 0 = No Limit(?)
+            instances   = 1
+        }
+
+        enhancement_pass_two = [PSCustomObject]@{
+            model       = "prob-3"
+            scale       = 0
+            w           = 1920
+            h           = 1080
+            preblur     = 0.3
+            noise       = 0.2
+            details     = 0.15
+            halo        = 0
+            blur        = 0.15
+            compression = 0
+            # estimate = 20
+            blend       = 0.2
+            grain       = 0.02
+            gsize       = 2
+            device      = -2
+            vram        = 1
+            instances   = 1
+        }
+    }
+}
