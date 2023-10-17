@@ -5,6 +5,7 @@
 # Changelog:
 # vNext
 # - Dynamically determine Topaz AI's model directory
+# - Use OGG Chapter file if present
 #
 # v4 - 2023-10-10
 # - Use DGIndex
@@ -587,14 +588,35 @@ ForEach ($file in $files)
         $video = [MediaFile]::new($file)
         $lang = $video.getAttribute("Video", "Language")
 
+        # Check if we have a chapter file
+        $chapterFile = "$($file.DirectoryName)/$($file.BaseName) - Chapter Information - OGG.txt"
+        if (-not (Test-Path -LiteralPath $chapterFile -PathType 'Leaf'))
+        {
+            $chapterFile = $null
+        }
+
         # Merge our upscaled video & everything but video from our original
         if ($lang.length)
         {
-            mkvmerge -o "$final_path" --quiet --no-audio --no-subtitles --no-buttons --language 0:$lang "$encode_path" --no-video "$($file.FullName)"
+            if ($chapterFile)
+            {
+                mkvmerge --quiet -o "$final_path" --no-audio --no-subtitles --no-buttons --language 0:$lang "$encode_path" --no-video "$($file.FullName)"
+            }
+            else
+            {
+                mkvmerge --quiet --chapters "`"$($chapterFile)`"" -o "$final_path" --no-audio --no-subtitles --no-buttons --language 0:$lang "$encode_path" --no-video "$($file.FullName)"
+            }
         }
         else
         {
-            mkvmerge -o "$final_path" --quiet --no-audio --no-subtitles --no-buttons "$encode_path" --no-video "$($file.FullName)"
+            if ($chapterFile)
+            {
+                mkvmerge --quiet --chapters "`"$($chapterFile)`"" -o "$final_path" --no-audio --no-subtitles --no-buttons "$encode_path" --no-video "$($file.FullName)"
+            }
+            else
+            {
+                mkvmerge --quiet -o "$final_path" --no-audio --no-subtitles --no-buttons "$encode_path" --no-video "$($file.FullName)"
+            }
         }
 
         # Verify we wrote the file
