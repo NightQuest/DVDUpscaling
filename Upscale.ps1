@@ -6,6 +6,7 @@
 # vNext
 # - Dynamically determine Topaz AI's model directory
 # - Use OGG Chapter file if present
+# - Bug fixes
 #
 # v4 - 2023-10-10
 # - Use DGIndex
@@ -26,167 +27,9 @@
 # - Initial Version, basic functionality
 #
 
-# Topaz Video AI model directories - required
-$regEntry = Get-Item 'HKLM:\SOFTWARE\Topaz Labs LLC\Topaz Video AI'
-if (-not $regEntry)
-{
-    Write-Error "[ERROR]: Cannot Find Topaz Video AI Registry Entry! Are you sure it's installed?"
-    exit
-}
-
-$modelDir = $regEntry.GetValue('ModelDir').Trim('\\')
-if (-not $modelDir.length)
-{
-    Write-Error "[ERROR]: Cannot Find Topaz Video AI's modelDir Registry Entry!"
-    exit
-}
-
-if (-not (Test-Path -LiteralPath $modelDir -PathType 'Container'))
-{
-    Write-Error "[ERROR]: Not a valid directory: `"$($modelDir)`""
-    exit
-}
-
-$env:TVAI_MODEL_DATA_DIR = $modelDir
-$env:TVAI_MODEL_DIR = $modelDir
-
-$config = [PSCustomObject]@{
-    encoding_tool = "Stardust Upscaler v4"
-
-    # Input, Output, and temporary folders
-    input_folder = "E:/Dragon Ball/Season 1/RAW"
-    output_folder = "E:/Dragon Ball/Season 1"
-    temp_folder = "E:/temp"
-
-    # Utility folders
-    topaz_video_ai_location = "C:/Program Files/Topaz Labs LLC/Topaz Video AI"
-    hybrid_location = "C:/Program Files/Hybrid"
-
-    # Process settings
-    clean_temp = $true
-    skip_existing = $true
-
-    # De-interlace settings
-    auto_crop = $true
-    force_square_pixels = $true
-    vs_resample_kernel = 'spline16'
-
-    force_input_fps = $false
-    force_output_fps = $false
-
-    input_frame_rate_num = $null
-    input_frame_rate_den = $null
-
-    output_frame_rate_num = $null
-    output_frame_rate_den = $null
-
-    # Target dimensions
-    upscale_Width = 1440
-    upscale_Height = 1080
-
-    topaz = [PSCustomObject]@{
-        enhancement_passes = 2
-
-        enhancement_pass_one = [PSCustomObject]@{
-            # AI Model
-            model       = "prob-3"
-
-            # Has Another Enhancement?
-            scale       = 1
-
-            # Anti-Alias/Deblur
-            preblur     = 0 
-
-            # Reduce Noise
-            noise       = 0.25
-
-            # Improve Detail
-            details     = 0
-
-            # De-halo
-            halo        = 0.25
-
-            # Sharpen
-            blur        = 0.25 
-
-            # Recover Original Detail
-            blend       = 0.2 
-
-            # Revert Compression
-            compression = 0.6
-
-            # estimate    = 20
-
-            # Grain Amount
-            grain       = 0.04
-
-            # Grain Size
-            gsize       = 2
-
-            # AI Processing Device
-            # -2 Auto
-            # -1 CPU
-            # 0 First GPU
-            # 1 Second GPU
-            # 2 All GPUs
-            device      = -2
-
-            # Max Memory Usage (50% -> 0.5)
-            vram        = 1
-
-            # Max Processes
-            # 1 = 1
-            # 0 = No Limit(?)
-            instances   = 1
-        }
-
-        enhancement_pass_two = [PSCustomObject]@{
-            model       = "prob-3"
-            scale       = 0
-            w           = 1440
-            h           = 1080
-            preblur     = 0.5
-            noise       = 0.5
-            details     = 0.35
-            halo        = 0
-            blur        = 0
-            compression = 0.5
-            # estimate = 20
-            blend       = 0.2
-            grain       = 0.04
-            gsize       = 2
-            device      = -2
-            vram        = 1
-            instances   = 1
-        }
-    }
-}
-
-# Current working directory
-$curLoc = (Get-Location).Path
-$toolsPath = "$curLoc/bin"
-
-# Tool paths
-$vspipe_path = "$($config.hybrid_location)/64bit/Vapoursynth/VSPipe.exe"
-$ffmpeg_ai_path = "$($config.topaz_video_ai_location)/ffmpeg.exe"
-$ffmpeg_path = "$toolsPath/ffmpeg/bin/ffmpeg.exe"
-$ffprobe_path = "$toolsPath/ffmpeg/bin/ffprobe.exe"
-$x265_path = "$toolsPath/x265/x265-10b.exe"
-$mediainfo_path = "$toolsPath/MediaInfo/MediaInfo.exe"
-$mkvmerge_path = "$toolsPath/mkvtoolnix/mkvmerge.exe"
-$mkvpropredit_path = "$toolsPath/mkvtoolnix/mkvpropedit.exe"
-$dgindex_path = "$toolsPath/dgmpgdec/DGIndex.exe"
-$d2vsource_path = "$toolsPath/vsfilters/d2vsource/win64/d2vsource.dll"
-
-# Aliases for direct program execution
-Set-Alias -Name mediainfo -Value $mediainfo_path
-Set-Alias -Name ffmpeg -Value $ffmpeg_path
-Set-Alias -Name ffprobe -Value $ffprobe_path
-Set-Alias -Name mkvmerge -Value $mkvmerge_path
-Set-Alias -Name mkvpropedit -Value $mkvpropredit_path
-Set-Alias -Name DGIndex -Value $dgindex_path
-
-# Include other files
+# Include files
+. "Config.ps1"
+. "Paths.ps1"
 . "Modules/MediaFile.ps1"
 
 # Get input files
@@ -200,10 +43,16 @@ if ($config.skip_existing)
     $files = $files | Where-Object { -not (Test-Path -LiteralPath "$($config.output_folder)/$($_.BaseName).mkv" -PathType 'Leaf') }
 
     # Sort files in order (Assumes episodes start with a number)
-    if ($files[0].BaseName -match "\d+ .*")
+    if ($files.length -ge 1 -and $files[0].BaseName -match "\d+ .*")
     {
         $files = $files | Sort-Object { [int](($_.BaseName -Split ' ')[0]) }
     }
+}
+
+if ($files.length -eq 0)
+{
+    Write-Output "[INFO]: No files to process."
+    exit
 }
 
 # Iterate our files
