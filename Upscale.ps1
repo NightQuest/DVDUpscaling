@@ -28,8 +28,8 @@
 #
 
 # Include files
-. "Config.ps1"
-. "Paths.ps1"
+. "./Config.ps1"
+. "./Paths.ps1"
 . "Modules/MediaFile.ps1"
 
 # Get input files
