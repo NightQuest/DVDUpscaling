@@ -60,7 +60,11 @@ ForEach ($file in $files)
 {
     # Setup our paths
     $temp_path = "$($config.temp_folder)/$($file.BaseName)"
+
     $d2v_path = "$($temp_path).d2v"
+    $d2v_bad_path = "$($temp_path).d2v.bad"
+    $d2v_fix_path = "$($temp_path).fix.txt"
+
     $deint_path = "$($temp_path)_deinterlaced.mov"
     $upscale_path = "$($temp_path)_upscaled.mov"
     $encode_path = "$($temp_path)_encoded.h265"
@@ -358,6 +362,16 @@ ForEach ($file in $files)
                 if (Test-Path -LiteralPath $d2v_path -PathType 'Leaf')
                 {
                     Remove-Item -Path $d2v_path
+                }
+
+                if (Test-Path -LiteralPath $d2v_bad_path -PathType 'Leaf')
+                {
+                    Remove-Item -Path $d2v_bad_path
+                }
+
+                if (Test-Path -LiteralPath $d2v_fix_path -PathType 'Leaf')
+                {
+                    Remove-Item -Path $d2v_fix_path
                 }
             }
         }
