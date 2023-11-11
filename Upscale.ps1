@@ -276,7 +276,7 @@ ForEach ($file in $files)
         $now = Get-Date
         $time_taken = New-TimeSpan -Start $start_time -End $now
 
-        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
+        Write-Output "[INFO]: Done. Took: $($time_taken.toString())"
     }
     else
     {
@@ -343,7 +343,7 @@ ForEach ($file in $files)
         $now = Get-Date
         $time_taken = New-TimeSpan -Start $start_time -End $now
 
-        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
+        Write-Output "[INFO]: Done. Took: $($time_taken.toString())"
 
         if (Test-Path -LiteralPath $upscale_path -PathType 'Leaf')
         {
@@ -404,7 +404,7 @@ ForEach ($file in $files)
         $now = Get-Date
         $time_taken = New-TimeSpan -Start $start_time -End $now
 
-        Write-Output "[INFO] Done. Took: $($time_taken.toString())"
+        Write-Output "[INFO]: Done. Took: $($time_taken.toString())"
 
         if (Test-Path -LiteralPath $encode_path -PathType 'Leaf')
         {
