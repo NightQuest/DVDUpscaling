@@ -4,6 +4,7 @@
 # 
 # Changelog:
 # vNext
+# - Allow automatic determination of target width
 # - Dynamically determine Topaz AI's model directory
 # - Use OGG Chapter file if present
 # - Bug fixes
@@ -127,6 +128,14 @@ ForEach ($file in $files)
     }
 
     Write-Output "[INFO]: FPS: $frameRate -> $frameRateNew"
+
+    if ($config.automatically_determine_width)
+    {
+        $config.upscale_Width = [Math]::Round($config.upscale_Height * $DAR)
+        $config.upscale_Width += $upscale_Width % 2
+
+        Write-Output "[INFO]: Determined output resolution: $($config.upscale_Width)x$($config.upscale_Height)"
+    }
 
     # Have we already De-Interlaced?
     if (-not (Test-Path -LiteralPath $deint_path -PathType 'Leaf'))
@@ -309,7 +318,18 @@ ForEach ($file in $files)
                 $filter_complex_pass_one += ":"
             }
 
-            $filter_complex_pass_one += "$name=$($config.topaz.enhancement_pass_one.$name)"
+            if ($name -eq 'w')
+            {
+                $filter_complex_pass_one += "w=$($config.upscale_Width)"
+            }
+            elseif ($name -eq 'h')
+            {
+                $filter_complex_pass_one += "h=$($config.upscale_Height)"
+            }
+            else
+            {
+                $filter_complex_pass_one += "$name=$($config.topaz.enhancement_pass_one.$name)"
+            }
         }
 
         if ($config.topaz.enhancement_passes -eq 2)
@@ -322,7 +342,18 @@ ForEach ($file in $files)
                     $filter_complex_pass_two += ":"
                 }
 
-                $filter_complex_pass_two += "$name=$($config.topaz.enhancement_pass_two.$name)"
+                if ($name -eq 'w')
+                {
+                    $filter_complex_pass_two += "w=$($config.upscale_Width)"
+                }
+                elseif ($name -eq 'h')
+                {
+                    $filter_complex_pass_two += "h=$($config.upscale_Height)"
+                }
+                else
+                {
+                    $filter_complex_pass_two += "$name=$($config.topaz.enhancement_pass_two.$name)"
+                }
             }
         }
 
